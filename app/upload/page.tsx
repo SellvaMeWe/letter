@@ -41,7 +41,7 @@ export default function UploadPage() {
       const contactsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as Contact[];
+      })) as unknown as Contact[];
       setContacts(contactsData);
       setLoading(false);
     });
@@ -51,10 +51,13 @@ export default function UploadPage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
+    if (
+      file &&
+      (file.type.startsWith("image/") || file.type === "application/pdf")
+    ) {
       setSelectedFile(file);
     } else {
-      alert("Please select a valid image file");
+      alert("Please select a valid image or PDF file");
     }
   };
 
@@ -66,7 +69,7 @@ export default function UploadPage() {
       !formData.recipientId ||
       !formData.description
     ) {
-      alert("Please fill in all fields and select an image");
+      alert("Please fill in all fields and select a file");
       return;
     }
 
@@ -87,6 +90,8 @@ export default function UploadPage() {
         recipientId: formData.recipientId,
         description: formData.description,
         imageUrl,
+        fileType: selectedFile.type,
+        fileName: selectedFile.name,
         createdAt: new Date(),
       });
 
@@ -173,7 +178,7 @@ export default function UploadPage() {
                 >
                   <option value="">Select a recipient</option>
                   {contacts.map((contact) => (
-                    <option key={contact.id} value={contact.id}>
+                    <option key={contact.contactId} value={contact.contactId}>
                       {contact.name}
                     </option>
                   ))}
@@ -202,16 +207,16 @@ export default function UploadPage() {
 
               <div>
                 <label
-                  htmlFor="image"
+                  htmlFor="file"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  <Image className="h-4 w-4 inline mr-2" />
-                  Letter Image
+                  <Upload className="h-4 w-4 inline mr-2" />
+                  Letter File (Image or PDF)
                 </label>
                 <input
                   type="file"
-                  id="image"
-                  accept="image/*"
+                  id="file"
+                  accept="image/*,application/pdf"
                   onChange={handleFileSelect}
                   className="input-field"
                   required
@@ -259,6 +264,3 @@ export default function UploadPage() {
     </div>
   );
 }
-
-
-

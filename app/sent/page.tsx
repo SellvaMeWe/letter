@@ -12,8 +12,9 @@ import {
 import { db } from "../../firebase/config";
 import { Letter, Contact } from "../../types";
 import Navigation from "../../components/Navigation";
-import { Send, Calendar, User } from "lucide-react";
+import { Send, Calendar, User, FileText } from "lucide-react";
 import Link from "next/link";
+import { PDFThumbnail } from "../../components/PDFThumbnail";
 
 export default function SentPage() {
   const { user } = useAuth();
@@ -110,15 +111,25 @@ export default function SentPage() {
             {letters.map((letter) => (
               <Link key={letter.id} href={`/letter/${letter.id}`}>
                 <div className="card hover:shadow-lg transition-shadow cursor-pointer">
-                  <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                  <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
                     {letter.imageUrl ? (
-                      <img
-                        src={letter.imageUrl}
-                        alt="Letter"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
+                      letter.fileType === "application/pdf" ? (
+                        <PDFThumbnail
+                          pdfUrl={letter.imageUrl}
+                          fileName={letter.fileName}
+                          className="w-full h-full"
+                        />
+                      ) : (
+                        <img
+                          src={letter.imageUrl}
+                          alt="Letter"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      )
                     ) : (
-                      <Send className="h-16 w-16 text-gray-400" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Send className="h-16 w-16 text-gray-400" />
+                      </div>
                     )}
                   </div>
 
@@ -146,6 +157,3 @@ export default function SentPage() {
     </div>
   );
 }
-
-
-

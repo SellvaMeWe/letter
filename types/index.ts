@@ -23,6 +23,8 @@ export interface Letter {
   recipientId: string;
   description: string;
   imageUrl: string;
+  fileType?: string;
+  fileName?: string;
   createdAt: Date;
 }
 

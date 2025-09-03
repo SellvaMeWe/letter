@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { FileText, Download, ExternalLink } from "lucide-react";
+import {
+  loadCachedThumbnail,
+  saveThumbnailToCache,
+  getThumbnailCacheKey,
+} from "../utils/thumbnailGenerator";
 
 // Declare PDF.js types
 declare global {
@@ -28,8 +33,21 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    generateThumbnail();
+    loadOrGenerateThumbnail();
   }, [pdfUrl]);
+
+  const loadOrGenerateThumbnail = async () => {
+    // First, try to load from cache
+    const cachedThumbnail = loadCachedThumbnail(pdfUrl);
+    if (cachedThumbnail) {
+      setThumbnailUrl(cachedThumbnail);
+      setIsLoading(false);
+      return;
+    }
+
+    // If not cached, generate new thumbnail
+    await generateThumbnail();
+  };
 
   const loadPDFJS = async () => {
     if (window.pdfjsLib) {
@@ -137,6 +155,9 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
         // Convert to data URL
         const thumbnailDataUrl = canvas.toDataURL("image/png");
         setThumbnailUrl(thumbnailDataUrl);
+
+        // Save to cache for future use
+        saveThumbnailToCache(pdfUrl, thumbnailDataUrl, fileName);
       } catch (pdfError) {
         console.warn("PDF.js failed, trying alternative approach:", pdfError);
 
@@ -199,7 +220,13 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
                   iframe.contentDocument || iframe.contentWindow?.document;
                 if (iframeDoc) {
                   // This will likely fail due to CORS, but we try anyway
-                  ctx.drawImage(iframe as unknown as CanvasImageSource, 0, 0, canvas.width, canvas.height);
+                  ctx.drawImage(
+                    iframe as unknown as CanvasImageSource,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                  );
                 }
               } catch (captureError) {
                 // If capture fails, draw a PDF preview placeholder
@@ -213,6 +240,9 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
 
               const thumbnailDataUrl = canvas.toDataURL("image/png");
               setThumbnailUrl(thumbnailDataUrl);
+
+              // Save to cache for future use
+              saveThumbnailToCache(pdfUrl, thumbnailDataUrl, fileName);
 
               // Clean up
               document.body.removeChild(iframe);
@@ -363,6 +393,9 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
       // Convert canvas to data URL
       const thumbnailDataUrl = canvas.toDataURL("image/png");
       setThumbnailUrl(thumbnailDataUrl);
+
+      // Save to cache for future use
+      saveThumbnailToCache(pdfUrl, thumbnailDataUrl, fileName);
     } catch (error) {
       console.error("Error generating icon thumbnail:", error);
       setHasError(true);

@@ -114,11 +114,19 @@ export default function InboxPage() {
                   <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
                     {letter.imageUrl ? (
                       letter.fileType === "application/pdf" ? (
-                        <PDFThumbnail
-                          pdfUrl={letter.imageUrl}
-                          fileName={letter.fileName}
-                          className="w-full h-full"
-                        />
+                        letter.thumbnailUrl ? (
+                          <img
+                            src={letter.thumbnailUrl}
+                            alt="PDF Thumbnail"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <PDFThumbnail
+                            pdfUrl={letter.imageUrl}
+                            fileName={letter.fileName}
+                            className="w-full h-full"
+                          />
+                        )
                       ) : (
                         <img
                           src={letter.imageUrl}

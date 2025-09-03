@@ -25,6 +25,7 @@ export interface Letter {
   imageUrl: string;
   fileType?: string;
   fileName?: string;
+  thumbnailUrl?: string;
   createdAt: Date;
 }
 

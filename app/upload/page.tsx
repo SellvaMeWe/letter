@@ -16,6 +16,7 @@ import { Contact } from "../../types";
 import Navigation from "../../components/Navigation";
 import { Upload, Image, User, Send, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { generatePDFThumbnail } from "../../utils/thumbnailGenerator";
 
 export default function UploadPage() {
   const { user } = useAuth();
@@ -76,13 +77,23 @@ export default function UploadPage() {
     setUploading(true);
 
     try {
-      // Upload image to Firebase Storage
+      // Upload file to Firebase Storage
       const storageRef = ref(
         storage,
         `letters/${user.uid}/${Date.now()}_${selectedFile.name}`
       );
       const uploadResult = await uploadBytes(storageRef, selectedFile);
       const imageUrl = await getDownloadURL(uploadResult.ref);
+
+      // Generate thumbnail for PDF files
+      let thumbnailUrl: string | undefined;
+      if (selectedFile.type === "application/pdf") {
+        try {
+          thumbnailUrl = (await generatePDFThumbnail(imageUrl)) || undefined;
+        } catch (error) {
+          console.warn("Failed to generate PDF thumbnail:", error);
+        }
+      }
 
       // Save letter metadata to Firestore
       await addDoc(collection(db, "letters"), {
@@ -92,6 +103,7 @@ export default function UploadPage() {
         imageUrl,
         fileType: selectedFile.type,
         fileName: selectedFile.name,
+        thumbnailUrl,
         createdAt: new Date(),
       });
 

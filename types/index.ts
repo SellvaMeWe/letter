@@ -4,13 +4,17 @@ export interface User {
   uid: string;
   email?: string;
   createdAt: Date;
+  meweLoginRequestToken?: string;
+  meweToken?: string;
+  meweTokenExpiresAt?: string;
 }
 
 export interface Contact {
-  id: string;
   userId: string;
   name: string;
-  sourceAppId: string;
+  contactId: string;
+  handle: string;
+  updatedAt?: Date;
 }
 
 export interface Letter {
@@ -28,6 +32,8 @@ export interface AuthContextType {
   signInAnonymously: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<FirebaseUser>;
   signInWithEmail: (email: string, password: string) => Promise<FirebaseUser>;
+  getMeWeAuthToken: () => Promise<any>;
+  loadMeWeContacts: () => Promise<any>;
   signOut: () => Promise<void>;
 }
 

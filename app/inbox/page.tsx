@@ -34,7 +34,7 @@ export default function InboxPage() {
       const contactsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as Contact[];
+      })) as unknown as Contact[];
       setContacts(contactsData);
     });
 
@@ -62,7 +62,7 @@ export default function InboxPage() {
   }, [user]);
 
   const getContactName = (contactId: string) => {
-    const contact = contacts.find((c) => c.id === contactId);
+    const contact = contacts.find((c) => c.contactId === contactId);
     return contact ? contact.name : "Unknown Contact";
   };
 
@@ -146,5 +146,6 @@ export default function InboxPage() {
     </div>
   );
 }
+
 
 

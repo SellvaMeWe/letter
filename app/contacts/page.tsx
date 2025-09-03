@@ -14,6 +14,7 @@ import {
 import { db } from "../../firebase/config";
 import { Contact } from "../../types";
 import Navigation from "../../components/Navigation";
+import { MeWeContacts } from "../../components/MeWeContacts";
 import { Users, Plus, Trash2, Smartphone } from "lucide-react";
 
 export default function ContactsPage() {
@@ -35,7 +36,7 @@ export default function ContactsPage() {
       const contactsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as Contact[];
+      })) as unknown as Contact[];
       setContacts(contactsData);
       setLoading(false);
     });
@@ -89,17 +90,21 @@ export default function ContactsPage() {
             <Users className="h-8 w-8 text-primary-600" />
             <span>Contacts</span>
           </h1>
-          <p className="mt-2 text-gray-600">Manage your imported contacts</p>
+          <p className="mt-2 text-gray-600">Manage your contacts</p>
         </div>
 
-        <div className="mb-6">
-          <button
+        <div className="mb-6 flex gap-3">
+          {/* <button
             onClick={() => setShowImportForm(!showImportForm)}
             className="btn-primary flex items-center space-x-2"
           >
             <Plus className="h-5 w-5" />
             <span>Import Contact</span>
-          </button>
+          </button> */}
+
+          <div className="mb-8">
+            <MeWeContacts />
+          </div>
         </div>
 
         {showImportForm && (
@@ -179,19 +184,19 @@ export default function ContactsPage() {
               No contacts yet
             </h3>
             <p className="text-gray-600 mb-6">
-              Import your first contact to get started.
+              Add your first contact to get started.
             </p>
-            <button
+            {/* <button
               onClick={() => setShowImportForm(true)}
               className="btn-primary"
             >
               Import Your First Contact
-            </button>
+            </button> */}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {contacts.map((contact) => (
-              <div key={contact.id} className="card">
+              <div key={contact.contactId} className="card">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -199,12 +204,11 @@ export default function ContactsPage() {
                     </h3>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Smartphone className="h-4 w-4" />
-                      <span>App ID: {contact.sourceAppId}</span>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => handleDeleteContact(contact.id)}
+                    onClick={() => handleDeleteContact(contact.contactId)}
                     className="text-red-600 hover:text-red-800 transition-colors p-1"
                     title="Delete contact"
                   >
@@ -219,5 +223,3 @@ export default function ContactsPage() {
     </div>
   );
 }
-
-

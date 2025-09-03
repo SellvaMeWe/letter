@@ -52,7 +52,7 @@ export default function Navigation() {
                 className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
               >
                 <Upload className="h-5 w-5" />
-                <span>Upload</span>
+                <span>Send Letter</span>
               </Link>
             </div>
           </div>

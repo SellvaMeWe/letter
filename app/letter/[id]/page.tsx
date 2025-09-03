@@ -42,6 +42,7 @@ export default function LetterDetailPage() {
             ...doc.data(),
             createdAt: doc.data().createdAt?.toDate() || new Date(),
           } as Letter;
+          console.log("Loaded letter:", letterData);
           setLetter(letterData);
         } else {
           setError("Letter not found");
@@ -76,12 +77,23 @@ export default function LetterDetailPage() {
   }, [user, letterId]);
 
   const getContactName = (contactId: string) => {
-    const contact = contacts.find((c) => c.contactId === contactId);
-    return contact ? contact.name : "Unknown Contact";
+    // Find by document ID (which is what recipientId actually contains)
+    const contact = contacts.find((c) => c.id === contactId);
+
+    // If not found, check if it's the current user's UID
+    if (!contact && contactId === user?.uid) {
+      console.log("It's the current user");
+      return "You";
+    }
+
+    const result = contact
+      ? contact.name
+      : `Contact ${contactId.slice(0, 8)}...`;
+
+    return result;
   };
 
   const isSender = letter?.senderId === user?.uid;
-  const isRecipient = letter?.recipientId === user?.uid;
 
   if (!user) {
     return (

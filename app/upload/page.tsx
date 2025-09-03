@@ -190,7 +190,7 @@ export default function UploadPage() {
                 >
                   <option value="">Select a recipient</option>
                   {contacts.map((contact) => (
-                    <option key={contact.contactId} value={contact.contactId}>
+                    <option key={contact.id} value={contact.id}>
                       {contact.name}
                     </option>
                   ))}

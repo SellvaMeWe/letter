@@ -10,6 +10,7 @@ export interface User {
 }
 
 export interface Contact {
+  id: string;
   userId: string;
   name: string;
   contactId: string;

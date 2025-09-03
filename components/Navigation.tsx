@@ -59,7 +59,7 @@ export default function Navigation() {
 
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
-              User: {user.uid.slice(0, 8)}...
+              {user.name ? user.name : `User: ${user.uid.slice(0, 8)}...`}
             </span>
             <button
               onClick={signOut}
@@ -74,5 +74,3 @@ export default function Navigation() {
     </nav>
   );
 }
-
-

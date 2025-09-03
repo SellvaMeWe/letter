@@ -42,7 +42,7 @@ export default function InboxPage() {
     // Listen to received letters
     const lettersQuery = query(
       collection(db, "letters"),
-      where("recipientId", "==", user.uid),
+      where("recipientId", "==", user.meweUserId),
       orderBy("createdAt", "desc")
     );
 

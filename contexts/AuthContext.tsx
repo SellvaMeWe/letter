@@ -9,7 +9,16 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, collection } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+} from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 import { User, AuthContextType } from "../types";
 import { meweService } from "../services/meweService";
@@ -287,17 +296,99 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const loadMeWeContacts = async () => {
-    if (!user?.meweToken) {
-      throw new Error("No MeWe auth token found. Please load contacts first.");
+  const connectToMeWe = async () => {
+    if (!user) {
+      throw new Error("User not authenticated");
     }
 
     try {
-      console.log("Loading MeWe contacts with token:", user.meweToken);
-      const contactsResponse = await meweService.getContacts(user.meweToken);
+      console.log("Starting MeWe connection process...");
+
+      // First get the auth token
+      const tokenResponse = await getMeWeAuthToken();
+
+      if (tokenResponse.pending) {
+        throw new Error(
+          "MeWe authentication is still pending. Please complete the OTP verification first."
+        );
+      }
+
+      if (!tokenResponse.token) {
+        throw new Error("Failed to get MeWe auth token");
+      }
+
+      // Get user info from MeWe
+      console.log("Getting MeWe user info...");
+      const userInfoResponse = await fetch(
+        `/api/mewe/me?token=${tokenResponse.token}`
+      );
+
+      if (!userInfoResponse.ok) {
+        throw new Error("Failed to get MeWe user information");
+      }
+
+      const userInfo = await userInfoResponse.json();
+      console.log("Got MeWe user info:", userInfo);
+
+      // Update user with MeWe information
+      const updatedUser = {
+        ...user,
+        meweUserId: userInfo.userId,
+        name: userInfo.name,
+      };
+
+      // Filter out undefined values before saving to Firestore
+      const cleanUpdatedUser = Object.fromEntries(
+        Object.entries(updatedUser).filter(([_, value]) => value !== undefined)
+      );
+
+      await setDoc(doc(db, "users", user.uid), cleanUpdatedUser, {
+        merge: true,
+      });
+
+      // Update local user state
+      setUser(cleanUpdatedUser as unknown as User);
+      console.log("MeWe connection completed successfully");
+
+      return { userInfo, token: tokenResponse.token };
+    } catch (error) {
+      console.error("Error connecting to MeWe:", error);
+      throw error;
+    }
+  };
+
+  const loadMeWeContacts = async (meweToken: string) => {
+    if (!meweToken) {
+      throw new Error(
+        "No MeWe auth token found. Please connect to MeWe first."
+      );
+    }
+
+    try {
+      console.log("Loading MeWe contacts with token:", meweToken);
+      const contactsResponse = await meweService.getContacts(meweToken);
       console.log("Got MeWe contacts:", contactsResponse);
 
-      // Save contacts to Firestore
+      // Clear existing contacts for the current user
+      console.log("Clearing existing contacts for user:", user?.uid);
+      const existingContactsQuery = query(
+        collection(db, "contacts"),
+        where("userId", "==", user?.uid || "")
+      );
+      const existingContactsSnapshot = await getDocs(existingContactsQuery);
+
+      if (!existingContactsSnapshot.empty) {
+        const deleteBatch: Promise<void>[] = [];
+        existingContactsSnapshot.forEach((docSnapshot) => {
+          deleteBatch.push(deleteDoc(docSnapshot.ref));
+        });
+        await Promise.all(deleteBatch);
+        console.log(
+          `Deleted ${existingContactsSnapshot.size} existing contacts`
+        );
+      }
+
+      // Save new contacts to Firestore
       if (contactsResponse.list && contactsResponse.list.length > 0) {
         console.log(
           `Saving ${contactsResponse.list.length} MeWe contacts to database...`
@@ -305,14 +396,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const batch = [];
         for (const meweContact of contactsResponse.list) {
           // Use contactId as the document ID to prevent duplicates
-          const contactRef = doc(
-            db,
-            "contacts",
-            `${user.uid}_${meweContact.user.userId}`
-          );
+          const contactRef = doc(db, "contacts", `${meweContact.user.userId}`);
           const contact = meweContact.user;
           const contactData = {
-            userId: user.uid,
+            userId: user?.uid || "",
             name: contact.name,
             contactId: contact.userId,
             handle: contact.handle,
@@ -351,7 +438,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signUpWithEmail: handleSignUpWithEmail,
     signInWithEmail: handleSignInWithEmail,
     getMeWeAuthToken,
-    loadMeWeContacts,
+    connectToMeWe,
+    loadMeWeContacts: (meweToken: string | null) => {
+      if (!meweToken) {
+        return Promise.reject(new Error("MeWe token is required"));
+      }
+      return loadMeWeContacts(meweToken);
+    },
     signOut,
   };
 

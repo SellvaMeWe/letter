@@ -7,6 +7,8 @@ export interface User {
   meweLoginRequestToken?: string;
   meweToken?: string;
   meweTokenExpiresAt?: string;
+  meweUserId?: string;
+  name?: string;
 }
 
 export interface Contact {
@@ -37,7 +39,8 @@ export interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<FirebaseUser>;
   signInWithEmail: (email: string, password: string) => Promise<FirebaseUser>;
   getMeWeAuthToken: () => Promise<any>;
-  loadMeWeContacts: () => Promise<any>;
+  connectToMeWe: () => Promise<any>;
+  loadMeWeContacts: (meweToken: string | null) => Promise<any>;
   signOut: () => Promise<void>;
 }
 

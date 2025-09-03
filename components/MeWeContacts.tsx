@@ -1,13 +1,78 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { meweService } from "../services/meweService";
+import { db } from "../firebase/config";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export const MeWeContacts: React.FC = () => {
-  const { user, getMeWeAuthToken, loadMeWeContacts } = useAuth();
+  const { user, getMeWeAuthToken, connectToMeWe, loadMeWeContacts } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contactsLoaded, setContactsLoaded] = useState(false);
+  const [meweToken, setMeweToken] = useState<string | null>(null);
+  const [justConnected, setJustConnected] = useState(false);
+
+  // Initialize meweToken from user context on mount
+  useEffect(() => {
+    if (user?.meweToken) {
+      setMeweToken(user.meweToken);
+    }
+  }, []); // Only run once on mount
+
+  // Check if contacts are already loaded when component mounts
+  useEffect(() => {
+    const checkContactsLoaded = async () => {
+      if (user?.uid && !justConnected) {
+        try {
+          const contactsQuery = query(
+            collection(db, "contacts"),
+            where("userId", "==", user.uid)
+          );
+          const contactsSnapshot = await getDocs(contactsQuery);
+          setContactsLoaded(!contactsSnapshot.empty);
+        } catch (error) {
+          console.error("Error checking contacts:", error);
+        }
+      }
+    };
+
+    checkContactsLoaded();
+  }, [user?.uid, user?.meweToken, justConnected]);
+
+  const handleConnectToMeWe = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { userInfo, token } = await connectToMeWe();
+
+      // Update local state to reflect connection
+      console.log("Token:", token);
+
+      // Set the token directly from the return value
+      console.log("Setting meweToken to:", token);
+      setMeweToken(token);
+      setContactsLoaded(false);
+      setJustConnected(true);
+
+      console.log("MeWe connection successful:", userInfo);
+      console.log(
+        "Local state after update - meweToken:",
+        token,
+        "contactsLoaded:",
+        false,
+        "justConnected:",
+        true
+      );
+    } catch (error: any) {
+      setError(error.message || "Failed to connect to MeWe");
+      console.error("Error connecting to MeWe:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLoadContacts = async () => {
     try {
@@ -34,10 +99,11 @@ export const MeWeContacts: React.FC = () => {
 
       // Then load contacts and save to database
       console.log("Loading MeWe contacts...");
-      await loadMeWeContacts();
+      await loadMeWeContacts(tokenResponse.token);
 
-      // Refresh the page to show the loaded contacts
-      window.location.reload();
+      // Mark contacts as loaded
+      setContactsLoaded(true);
+      setJustConnected(false);
     } catch (error: any) {
       setError(error.message || "Failed to load contacts");
       console.error("Error loading MeWe contacts:", error);
@@ -54,15 +120,12 @@ export const MeWeContacts: React.FC = () => {
       console.log("Refreshing MeWe contacts...");
 
       // Load fresh contacts from MeWe and save to database
-      const contactsResponse = await loadMeWeContacts();
+      const contactsResponse = await loadMeWeContacts(meweToken);
 
       console.log(
         "Contacts refreshed and saved to database:",
         contactsResponse
       );
-
-      // Refresh the page to show updated contacts
-      window.location.reload();
     } catch (error: any) {
       setError(error.message || "Failed to refresh contacts");
       console.error("Error refreshing MeWe contacts:", error);
@@ -140,26 +203,29 @@ export const MeWeContacts: React.FC = () => {
               {user.meweLoginRequestToken ? "Ready" : "Not available"}
             </p>
             <p>
-              {user.meweToken ? "✅" : "⏳"} Auth Token:{" "}
-              {user.meweToken ? "Ready" : "Not obtained"}
+              {meweToken ? "✅" : "⏳"} Auth Token:{" "}
+              {meweToken ? "Ready" : "Not obtained"}
             </p>
-            {user.meweTokenExpiresAt && (
-              <p>
-                ⏰ Expires: {new Date(user.meweTokenExpiresAt).toLocaleString()}
-              </p>
-            )}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          {!user.meweToken ? (
+          {!meweToken ? (
+            <button
+              onClick={handleConnectToMeWe}
+              disabled={loading}
+              className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? "Connecting..." : "Connect To MeWe"}
+            </button>
+          ) : !contactsLoaded ? (
             <button
               onClick={handleLoadContacts}
               disabled={loading}
               className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Loading Contacts..." : "Load MeWe Contacts"}
+              {loading ? "Loading Contacts..." : "Load Contacts"}
             </button>
           ) : (
             <button
@@ -167,7 +233,7 @@ export const MeWeContacts: React.FC = () => {
               disabled={loading}
               className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Refreshing..." : "Refresh MeWe Contacts"}
+              {loading ? "Refreshing..." : "Refresh Contacts"}
             </button>
           )}
         </div>

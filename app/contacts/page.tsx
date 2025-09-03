@@ -51,8 +51,7 @@ export default function ContactsPage() {
     try {
       await addDoc(collection(db, "contacts"), {
         userId: user.uid,
-        name: newContact.name,
-        sourceAppId: newContact.sourceAppId,
+        name: newContact.name
       });
 
       setNewContact({ name: "", sourceAppId: "" });

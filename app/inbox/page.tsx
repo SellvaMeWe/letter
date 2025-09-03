@@ -40,26 +40,36 @@ export default function InboxPage() {
       setContacts(contactsData);
     });
 
-    // Listen to received letters
-    const lettersQuery = query(
-      collection(db, "letters"),
-      where("recipientId", "==", user.meweUserId),
-      orderBy("createdAt", "desc")
-    );
+    // Only listen to received letters if user has meweUserId (connected to MeWe)
+    let lettersUnsubscribe: (() => void) | null = null;
 
-    const lettersUnsubscribe = onSnapshot(lettersQuery, (snapshot) => {
-      const lettersData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as Letter[];
-      setLetters(lettersData);
+    if (user.meweUserId) {
+      const lettersQuery = query(
+        collection(db, "letters"),
+        where("recipientId", "==", user.meweUserId),
+        orderBy("createdAt", "desc")
+      );
+
+      lettersUnsubscribe = onSnapshot(lettersQuery, (snapshot) => {
+        const lettersData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date(),
+        })) as Letter[];
+        setLetters(lettersData);
+        setLoading(false);
+      });
+    } else {
+      // If no meweUserId, set empty letters and stop loading
+      setLetters([]);
       setLoading(false);
-    });
+    }
 
     return () => {
       contactsUnsubscribe();
-      lettersUnsubscribe();
+      if (lettersUnsubscribe) {
+        lettersUnsubscribe();
+      }
     };
   }, [user]);
 

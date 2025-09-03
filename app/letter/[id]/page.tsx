@@ -93,7 +93,7 @@ export default function LetterDetailPage() {
     return result;
   };
 
-  const isSender = letter?.senderId === user?.uid;
+  const isSender = letter?.senderId === user?.meweUserId;
 
   if (!user) {
     return (

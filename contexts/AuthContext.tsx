@@ -335,6 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         ...user,
         meweUserId: userInfo.userId,
         name: userInfo.name,
+        photoUrl: userInfo.profilePhoto.small,
       };
 
       // Filter out undefined values before saving to Firestore

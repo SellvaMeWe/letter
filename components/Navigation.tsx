@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
+import { Avatar } from "./Avatar";
 import { Mail, Send, Users, Upload, LogOut } from "lucide-react";
 
 export default function Navigation() {
@@ -58,9 +59,14 @@ export default function Navigation() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              {user.name ? user.name : `User: ${user.uid.slice(0, 8)}...`}
-            </span>
+            <div className="flex items-center space-x-3">
+              {user.name && (
+                <Avatar photoUrl={user.photoUrl} name={user.name} size="sm" />
+              )}
+              <span className="text-sm text-gray-600">
+                {user.name ? user.name : `User: ${user.uid.slice(0, 8)}...`}
+              </span>
+            </div>
             <button
               onClick={signOut}
               className="flex items-center space-x-2 text-gray-700 hover:text-red-600 transition-colors"

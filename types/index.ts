@@ -9,6 +9,7 @@ export interface User {
   meweTokenExpiresAt?: string;
   meweUserId?: string;
   name?: string;
+  photoUrl?: string;
 }
 
 export interface Contact {

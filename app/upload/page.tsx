@@ -97,7 +97,7 @@ export default function UploadPage() {
 
       // Save letter metadata to Firestore
       await addDoc(collection(db, "letters"), {
-        senderId: user.uid,
+        senderId: user.meweUserId,
         recipientId: formData.recipientId,
         description: formData.description,
         imageUrl,

@@ -12,6 +12,7 @@ import {
 import { db } from "../../firebase/config";
 import { Letter, Contact } from "../../types";
 import Navigation from "../../components/Navigation";
+import { Avatar } from "../../components/Avatar";
 import { Mail, Calendar, User, FileText } from "lucide-react";
 import Link from "next/link";
 import { PDFThumbnail } from "../../components/PDFThumbnail";
@@ -143,7 +144,14 @@ export default function InboxPage() {
 
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <User className="h-4 w-4" />
+                      <Avatar
+                        photoUrl={
+                          contacts.find((c) => c.contactId === letter.senderId)
+                            ?.photoUrl
+                        }
+                        name={getContactName(letter.senderId)}
+                        size="sm"
+                      />
                       <span>From: {getContactName(letter.senderId)}</span>
                     </div>
 

@@ -18,6 +18,7 @@ export interface Contact {
   contactId: string;
   handle: string;
   updatedAt?: Date;
+  photoUrl?: string;
 }
 
 export interface Letter {

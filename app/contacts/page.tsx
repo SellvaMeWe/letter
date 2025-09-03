@@ -15,6 +15,7 @@ import { db } from "../../firebase/config";
 import { Contact } from "../../types";
 import Navigation from "../../components/Navigation";
 import { MeWeContacts } from "../../components/MeWeContacts";
+import { Avatar } from "../../components/Avatar";
 import { Users, Plus, Trash2, Smartphone } from "lucide-react";
 
 export default function ContactsPage() {
@@ -51,7 +52,7 @@ export default function ContactsPage() {
     try {
       await addDoc(collection(db, "contacts"), {
         userId: user.uid,
-        name: newContact.name
+        name: newContact.name,
       });
 
       setNewContact({ name: "", sourceAppId: "" });
@@ -197,12 +198,25 @@ export default function ContactsPage() {
             {contacts.map((contact) => (
               <div key={contact.contactId} className="card">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {contact.name}
-                    </h3>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Smartphone className="h-4 w-4" />
+                  <div className="flex items-start space-x-3 flex-1">
+                    <Avatar
+                      photoUrl={contact.photoUrl}
+                      name={contact.name}
+                      size="md"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">
+                        {contact.name}
+                      </h3>
+                      {contact.handle && (
+                        <p className="text-sm text-gray-600 mb-2">
+                          @{contact.handle}
+                        </p>
+                      )}
+                      <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <Smartphone className="h-4 w-4" />
+                        <span>MeWe</span>
+                      </div>
                     </div>
                   </div>
 

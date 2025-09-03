@@ -12,11 +12,12 @@ interface MeWeContact {
   userId: string;
   name: string;
   handle: string;
+  photoUrl: string;
   // Add other contact fields as needed based on actual API response
 }
 
 interface MeWeContactsResponse {
-  list: {user: MeWeContact}[];
+  list: {user: {userId: string; name: string; handle: string; profilePhoto: {small: string}}}[];
   nextPage?: string;
   // Add other response fields as needed
 }

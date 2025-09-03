@@ -404,6 +404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             contactId: contact.userId,
             handle: contact.handle,
             updatedAt: new Date(),
+            photoUrl: contact.profilePhoto.small,
           };
           console.log("Saving contact:", contactData);
           batch.push(setDoc(contactRef, contactData, { merge: true }));
